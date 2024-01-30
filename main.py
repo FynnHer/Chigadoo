@@ -1,10 +1,8 @@
 import numpy as np
 import nnfs
-from nnfs.datasets import spiral_data
-from nnfs.datasets import sine_data
 import matplotlib.pyplot as plt
 import os
-import cv2
+import csv
 nnfs.init()
 
 #Getting data
@@ -842,24 +840,29 @@ def create_data_mnist(path):
     
     return X, y, X_test, y_test
 #create data
-X, y, X_test, y_test = create_data_mnist('fashion_mnist_images')
-#shuffle data
 
+def load_phone_dataset(train, test):
+    X = []
+    y = []
+    trainfile = open(train)
+    header = []
+    csvreader = csv.reader(trainfile)
+    header = next(csvreader)
+    for row in csvreader:
+        X.append(row[:20])
+        y.append(row[20:])
+    X_test = []
+    testfile = open(test)
+    headertest = []
+    csvreader = csv.reader(testfile)
+    headertest = next(csvreader)
+    for row in csvreader:
+        X_test.append(row[1:])
+    return np.array(X), np.array(y), np.array(X_test)
 
+X, y, X_test = load_phone_dataset('train.csv','test.csv')
 
-keys = np.array(range(X.shape[0]))
-np.random.shuffle(keys)
-X = X[keys]
-y = y[keys]
-
-#flatten and scale -1 to 1
-X = (X.reshape(X.shape[0], -1).astype(np.float32) - 127.5) / 127.5
-X_test = (X_test.reshape(X_test.shape[0], -1).astype(np.float32) -127.5) / 127.5
-
-validation_X = X[25]
-validation_y = y[25]
-
-plt.plot(validation_X)
+print(X, y, X_test)
 
 model = Model()
 
@@ -867,7 +870,7 @@ model.add(Layer_Dense(X.shape[1], 64))
 model.add(Activation_ReLU())
 model.add(Layer_Dense(64,64))
 model.add(Activation_ReLU())
-model.add(Layer_Dense(64,10))
+model.add(Layer_Dense(64,4))
 model.add(Activation_Softmax())
 
 model.set(
@@ -877,8 +880,7 @@ model.set(
 )
 
 model.finalize()
-model.train(X, y, validation_data=(X_test, y_test),
-            epochs=10, batch_size=128, print_every=100)
+#model.train(X, y,epochs=10, print_every=100)
 
 
-plt.plot(validation_X)
+
